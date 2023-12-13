@@ -1,6 +1,6 @@
 <div align="center">
 <h1>Far3D</h1>
-<h3> Expanding the Horizon for Surround-view 3D Object Detection </h3>
+<h3> [AAAI2024] Expanding the Horizon for Surround-view 3D Object Detection </h3>
 </div>
 
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/far3d-expanding-the-horizon-for-surround-view/3d-object-detection-on-nuscenes-camera-only)](https://paperswithcode.com/sota/3d-object-detection-on-nuscenes-camera-only?p=far3d-expanding-the-horizon-for-surround-view)
@@ -35,14 +35,14 @@ tools/dist_test.sh projects/configs/far3d.py work_dirs/far3d/iter_82548.pth 8 --
 ```
 
 ## Results on Argoverse 2 Val Set.
-| Model | Backbone | Input size | mAP | CDS |
-| :---: | :---: | :---: | :---: | :---:|
-| BEVStereo | VoV-99 | (960, 640) | 0.146 | 0.104 |
-| SOLOFusion  | VoV-99 | (960, 640) | 0.149 | 0.106 |
-| PETR | VoV-99 | (960, 640) |  0.176 | 0.122 |
-| Sparse4Dv2  | VoV-99 | (960, 640) | 0.189 | 0.134 |
-| StreamPETR | VoV-99 | (960, 640) | 0.203 | 0.146|
-| Far3D | VoV-99 | (960, 640) | **0.244** | **0.181**|
+| Model | Backbone | Input size | mAP | CDS | Config | Download |
+| :---: | :---: | :---: | :---: | :---:| :---: | :---:|
+| BEVStereo | VoV-99 | (960, 640) | 0.146 | 0.104 | -- | -- |
+| SOLOFusion  | VoV-99 | (960, 640) | 0.149 | 0.106 | -- | -- |
+| PETR | VoV-99 | (960, 640) |  0.176 | 0.122 | -- | -- |
+| Sparse4Dv2  | VoV-99 | (960, 640) | 0.189 | 0.134 | -- | -- |
+| StreamPETR | VoV-99 | (960, 640) | 0.203 | 0.146| -- | -- |
+| Far3D | VoV-99 | (960, 640) | **0.244** | **0.181**| [config](projects/configs/far3d.py) | [model](https://github.com/megvii-research/Far3D/releases/download/v1.0/iter_82548.pth)/[log](https://github.com/megvii-research/Far3D/releases/download/v1.0/far3d.log)|
 
 **Notes**
 - [This config](projects/configs/far3d.py) can be used to reproduce the results on Argoverse 2.

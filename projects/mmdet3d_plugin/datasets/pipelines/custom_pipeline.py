@@ -9,7 +9,6 @@ import torch.nn.functional as F
 import pickle
 import refile
 import numpy as np
-import nori2 as nori
 from io import BytesIO
 import pyarrow
 import pyarrow.feather as feather
@@ -18,65 +17,13 @@ import pandas
 @PIPELINES.register_module()
 class AV2LoadMultiViewImageFromFiles(object):
     
-    def __init__(self, to_float32=False, color_type='unchanged',
-                 use_nori=False,
-                 nori_pkl_name='s3://argo/nori/0210/argoverse2_train.pkl',
-                 load_depth=False,
-                 nori_depth_pkl_path='s3://argo/nori/0410_camdepth/argoverse2_train_depth.pkl'
-                 ):
+    def __init__(self, to_float32=False, color_type='unchanged'):
         self.to_float32 = to_float32
         self.color_type = color_type
-
-        self.use_nori = use_nori
-        if self.use_nori:
-            self.fetcher = nori.Fetcher()
-            with refile.smart_open(nori_pkl_name, "rb") as f:
-                self.name2nori = dict(pickle.load(f))
-
-        # depth related
-        self.load_depth = load_depth
-        if load_depth:
-            with refile.smart_open(nori_depth_pkl_path, "rb") as f:
-                self.name2nori_depth = dict(pickle.load(f))
-
-    def load_img_from_nori(self, filename, kth=0):
-        ''' kth: the index of current image'''
-        nori_id = self.name2nori.get(str(filename), -1)
-
-        # else:   # default ver.
-        img_byte = self.fetcher.get(nori_id)
-        try:  # img is of shape (h, w, c)
-            img = mmcv.imfrombytes(img_byte, self.color_type)
-        except:
-            img = mmcv.imfrombytes(img_byte, self.color_type)
-        if self.to_float32:
-            img = img.astype(np.float32)
-        return img
-
-    def load_depthmap_from_nori(self, filename, lidar_timestamp):
-        _split, _log_id, _, _, _cam_dir, _img_timestamp = str(filename).split('/')
-        new_name = f'{_split}/{_log_id}/{lidar_timestamp}/{_cam_dir}.tiff'
-        nori_id = self.name2nori_depth.get(new_name, -1)
-        if nori_id == -1:
-            # current filename not exist
-            print('Nori not found for ', new_name)
-            raise FileNotFoundError
-        img_byte = self.fetcher.get(nori_id)
-        img = Image.open(BytesIO(img_byte))
-        img_arr = np.array(img)  # shape (1550, 2048), int32
-        return img_arr
         
     def __call__(self, results):
         filename = results['img_filename']
-        if not self.use_nori:   # load from localhost
-            img = [mmcv.imread(name, self.color_type).astype(np.float32) for name in filename]
-        else:   # load from nori
-            img = [self.load_img_from_nori(name, kth) for kth, name in enumerate(filename)]  # size: [(1550, 2048, 3)*3, (2048, 1550, 3), (1550, 2048, 3)*3]
-
-        if self.load_depth:
-            lidar_ts = results['lidar_timestamp']
-            depthmap = [self.load_depthmap_from_nori(name, lidar_ts) for name in filename]     # size: (Hi, Wi)*7
-            results['depthmap'] = depthmap
+        img = [mmcv.imread(name, self.color_type).astype(np.float32) for name in filename]
 
         results['filename'] = [str(name) for name in filename]
         results['img'] = img

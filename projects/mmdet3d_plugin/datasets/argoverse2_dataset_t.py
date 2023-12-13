@@ -1,20 +1,10 @@
-from os import path as osp
-import mmcv
 import torch
 import numpy as np
-from .av2_utils import yaw_to_quat
-from nuscenes.utils.data_classes import Box as NuScenesBox
-from mmdet3d.core.bbox import LiDARInstance3DBoxes
 from mmdet.datasets import DATASETS
 from av2.evaluation.detection.constants import CompetitionCategories
 from pathlib import Path
-from .av2_eval_util import EvalNori, read_feather_remote
-from .av2_utils import DetectionCfg
-from av2.map.map_api import ArgoverseStaticMap, RasterLayerType
-from ..datasets.av2_eval_util import ArgoverseStaticMapRemote
 from .argoverse2_dataset import Argoverse2Dataset
 import math
-from nuscenes.eval.common.utils import Quaternion
 from mmcv.parallel import DataContainer as DC
 import random
 
@@ -182,15 +172,10 @@ class Argoverse2DatasetT(Argoverse2Dataset):
         ego_pose_inv = invert_matrix_egopose_numpy(ego_pose)
         pts_filename = Path(self.split)/ info['scene_id']  / 'sensors' /  'lidar' / f"{info['lidar_timestamp_ns']}.feather"
         input_dict = dict(
-            # sample_idx=info['token'],
             pts_filename=pts_filename,
-            # sweeps=info['sweeps'],
             ego_pose=ego_pose,
             ego_pose_inv = ego_pose_inv,
-            # prev_idx=info['prev'],
-            # next_idx=info['next'],
             scene_token=info['scene_id'],
-            # frame_idx=info['frame_idx'],
             timestamp=index,
             lidar_timestamp=info['lidar_timestamp_ns'],
         )
@@ -207,7 +192,8 @@ class Argoverse2DatasetT(Argoverse2Dataset):
                 if cam_info is None:
                     return None
                 img_timestamp.append(cam_info['cam_timestamp_ns']/ 1e9)
-                image_paths.append(cam_info['fpath'])
+                image_path = self.data_root / cam_info['fpath']
+                image_paths.append(image_path)
                 image_raw_paths.append(cam_info['fpath'])
                 # obtain lidar to image transformation matrix
                 city_SE3_ego_cam_t = cam_info['city_SE3_ego_cam_t']
@@ -239,13 +225,7 @@ class Argoverse2DatasetT(Argoverse2Dataset):
                     extrinsics=extrinsics,
                     prev_exists=prev_exists,
                 ))
-        if self.use_offline_2d:
-            offline_2ds = []
-            for image_raw_path in image_raw_paths:
-                offline_2ds.append(self.offline_2d[str(image_raw_path)])
-            input_dict['offline_2d'] = offline_2ds
-        # if not self.test_mode:
-        if True:    # vis test 3d TODO rollback
+        if not self.test_mode:
             annos = self.get_ann_info(index, input_dict)
             annos.update( 
                 dict(

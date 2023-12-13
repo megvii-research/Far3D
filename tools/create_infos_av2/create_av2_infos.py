@@ -21,7 +21,7 @@ from av2.utils.io import  read_city_SE3_ego, read_feather
 from av2.geometry.camera.pinhole_camera import PinholeCamera
 from av2.evaluation.detection.constants import CompetitionCategories
 
-dataset_dir = Path("/data/av2")
+dataset_dir = Path("/data/av2") # replace with absolute path
 CAMERAS = tuple(x.value for x in RingCameras)
 LABEL_ATTR = (
     "tx_m","ty_m","tz_m","length_m","width_m","height_m","qw","qx","qy","qz",
@@ -50,19 +50,12 @@ def create_av2_infos(dataset_dir, split, out_dir):
         infos = {}
         record = sensor_caches.iloc[i].name
         log_id, _, lidar_timestamp_ns = record
-        # log_lidar_records = sensor_caches.xs((log_id)).index  #log_id场景的lidar stamps
-        # idx = np.where(log_lidar_records == timestamp_ns)[0].item()
         log_dir = src_dir / log_id
-        # sensor_dir = log_dir / "sensors"
-        # lidar_feather_path = sensor_dir / "lidar" / f"{lidar_timestamp_ns}.feather"
-        # sweep = Sweep.from_feather(lidar_feather_path=lidar_feather_path)
         timestamp_city_SE3_ego_dict = read_city_SE3_ego(log_dir=log_dir)
         city_SE3_ego_lidar_t = timestamp_city_SE3_ego_dict[lidar_timestamp_ns]
         infos['scene_id'] = log_id
-        # infos['sweep'] = sweep
         infos['lidar_timestamp_ns'] = lidar_timestamp_ns
         infos['city_SE3_ego_lidar_t'] = city_SE3_ego_lidar_t
-        # cam = _load_synchronized_cams(loader, sensor_dir, log_id, lidar_timestamp_ns)
         cam_infos = {}
         camera_models = {}
         for cam_name in CAMERAS:
@@ -146,10 +139,7 @@ def get_gt3d_data(dataset_dir, split, log_id, timestamp_ns):
     annotations_path = log_dir / "annotations.feather"
     annotations = read_feather(annotations_path)
     
-    # We loaded all the annotations --- filter to the current sweep.
     annotations = annotations[annotations["timestamp_ns"] == timestamp_ns]
-    # Filter annotations with no points in them.
-    # annotations = annotations[annotations["num_interior_pts"] > 0]
 
     #xyzlwh+yaw
     cuboid_params = torch.as_tensor(
@@ -160,11 +150,6 @@ def get_gt3d_data(dataset_dir, split, log_id, timestamp_ns):
     rot = mat_to_xyz(rot_mat)[..., -1]
     gt_boxes = torch.cat((cuboid_params[:, :-4], torch.as_tensor(rot).unsqueeze(1)), dim=-1)
 
-    # categories = torch.as_tensor(
-    #     [category_to_index[label_class]
-    #         for label_class in annotations["category"].to_numpy()],
-    #     dtype=torch.long,
-    # )
     names =[label_class
             for label_class in annotations["category"].to_numpy()]
     
@@ -238,8 +223,6 @@ def get_gt2d_data(synchronized_imagery, cam_infos, timestamp_city_SE3_ego_dict, 
             
             uv_corners = uv_corners.reshape(-1, V, D - 1)
             cuboids_vertices_cam = cuboids_vertices_cam[..., :-1].reshape(-1, V, D)
-            # valid_corner = cuboids_vertices_cam[..., 2] > 0
-            # uv_corners = uv_corners(valid_corner)
             for i in range(cuboids_vertices_cam.shape[0]):
                 if not (categories_idx[i] in CompetitionCLASSES):
                     continue
@@ -275,8 +258,6 @@ def get_gt2d_data(synchronized_imagery, cam_infos, timestamp_city_SE3_ego_dict, 
     return cam_name_to_img
 
 def post_process_coords(corner_coords, imsize = (2048, 1550)):
-    # if len(corner_coords) == 2:
-    #     return None
     polygon_from_2d_box = MultiPoint(corner_coords).convex_hull
     img_canvas = box(0, 0, imsize[0], imsize[1])
 
@@ -295,7 +276,7 @@ def post_process_coords(corner_coords, imsize = (2048, 1550)):
         return None
     
 if __name__ == '__main__':
-    splits = ["val"]
+    splits = ["val", "train"]
     for split in splits:
         create_av2_infos(
             dataset_dir=dataset_dir,

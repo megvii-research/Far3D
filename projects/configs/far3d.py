@@ -173,9 +173,7 @@ ida_aug_conf = {
         "rand_flip": False,
     }
 train_pipeline = [
-    dict(type='AV2LoadMultiViewImageFromFiles', to_float32=True,
-         use_nori=True, nori_pkl_name='s3://argoverse/nori/0410_camera/argoverse2_train_camera.pkl',
-         ),
+    dict(type='AV2LoadMultiViewImageFromFiles', to_float32=True),
     dict(type='LoadAnnotations3D', with_bbox_3d=True, with_label_3d=True, with_bbox=True,
         with_label=True, with_bbox_depth=True),
     dict(type='ObjectRangeFilter', point_cloud_range=point_cloud_range),
@@ -189,11 +187,7 @@ train_pipeline = [
              meta_keys=('filename', 'ori_shape', 'img_shape', 'pad_shape', 'scale_factor', 'flip', 'box_mode_3d', 'box_type_3d', 'img_norm_cfg', 'scene_token', 'gt_bboxes_3d','gt_labels_3d', 'ins_depthmap', 'ins_depthmap_mask'))
 ]
 test_pipeline = [
-    dict(type='AV2LoadMultiViewImageFromFiles', to_float32=True,
-         use_nori=True, nori_pkl_name='s3://argoverse/nori/0410_camera/argoverse2_val_camera.pkl',
-         ),
-    dict(type='LoadAnnotations3D', with_bbox_3d=True, with_label_3d=True, with_bbox=True,
-        with_label=True, with_bbox_depth=True),
+    dict(type='AV2LoadMultiViewImageFromFiles', to_float32=True),
     dict(type='AV2ResizeCropFlipRotImageV2', data_aug_conf=ida_aug_conf),
     dict(type='NormalizeMultiviewImage', **img_norm_cfg),
     dict(type='AV2PadMultiViewImage', size='same2max'),
@@ -208,7 +202,7 @@ test_pipeline = [
                 collect_keys=collect_keys,
                 class_names=class_names,
                 with_label=False),
-            dict(type='Collect3D', keys=['img', 'gt_bboxes_3d', 'gt_bboxes', 'centers2d'] + collect_keys,
+            dict(type='Collect3D', keys=['img'] + collect_keys,
             meta_keys=('filename', 'ori_shape', 'img_shape','pad_shape', 'scale_factor', 'flip', 'box_mode_3d', 'box_type_3d', 'img_norm_cfg', 'scene_token'))
         ])
 ]

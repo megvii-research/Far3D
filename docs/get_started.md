@@ -17,6 +17,7 @@ We use Argoverse 2 dataset and NuScenes dataset for experiments.
 - Similarly, after downloading [Argoverse 2 sensor dataset](https://www.argoverse.org/av2.html#download-link), it can be processed following above pipelines and [create_av2_infos.py](../tools/create_infos_av2/create_av2_infos.py).
 ```angular2html
 # first modify args such as split, dataset_dir.
+python tools/create_infos_av2/gather_argo2_anno_feather.py
 python tools/create_infos_av2/create_av2_infos.py
 ```
 
